@@ -13,6 +13,7 @@
 #include "VRCode.h"
 #include "VRHand.h"
 #include "IPickupable.h"
+#include "IEquippable.h"
 #include "Runtime/HeadMountedDisplay/Public/MotionControllerComponent.h"
 #include "Runtime/Engine/Classes/Components/SplineComponent.h"
 #include "Runtime/HeadMountedDisplay/Public/IHeadMountedDisplay.h"
@@ -146,13 +147,6 @@ AActor* AVRHand::GetActorNearHand()
 		}
 	}
 
-	// 	if ( GEngine && Hand == EControllerHand::Right )
-// 		GEngine->AddOnScreenDebugMessage( -1, 0.16f, FColor::Red,
-// 			FString::Printf( TEXT( "Actors near right hand %d, found pickupable: %d, %s" ), 
-// 			overlappingActors.Num(), 
-// 			count,
-// 			nearest ? TEXT( "TRUE" ) : TEXT( "FALSE" ) ) );
-
 	return nearest;
 }
 
@@ -161,7 +155,7 @@ void AVRHand::UpdateAnimationGripState()
 	// Default to Open
 	Grip = EGripState::Open;
 
-	if (AttachedActor)
+	if (AttachedActor || EquippedActor)
 	{
 		// If holding an object, always keep fist closed
 		Grip = EGripState::Grab;
@@ -172,14 +166,6 @@ void AVRHand::UpdateAnimationGripState()
 		if (WantsToGrip)
 		{
 			Grip = EGripState::Grab;
-		}
-
-		// If not holding something, the hand should open or close 
-		// slightly when passing over an interactable object
-		AActor *actor = GetActorNearHand();
-		if (actor)
-		{
-			Grip = EGripState::CanGrab;
 		}
 	}
 
@@ -196,34 +182,60 @@ void AVRHand::UpdateAnimationGripState()
 
 void AVRHand::GrabActor_Implementation()
 {
-	WantsToGrip = true;
-
-	AActor *actor = GetActorNearHand();
-	if (actor && actor->IsValidLowLevel())
+	if (EquippedActor)
 	{
-		AttachedActor = actor;
-		IPickupable::Execute_Pickup(actor, MotionController);
-		RumbleController(0.7);
+		IEquippable::Execute_Unequip(EquippedActor.GetObject());
+		IPickupable::Execute_Drop(EquippedActor.GetObject());
+		EquippedActor.SetInterface(nullptr);
+		EquippedActor.SetObject(nullptr);
+		AttachedActor = nullptr;
 	}
+	else
+	{
+		WantsToGrip = true;
 
+		AActor *actor = GetActorNearHand();
+		if (actor && actor->IsValidLowLevel())
+		{
+			AttachedActor = actor;
+			IPickupable::Execute_Pickup(actor, MotionController);
+			RumbleController(0.7);
+
+			UEquippable* equippable = Cast<UEquippable>(actor);
+			if (equippable)
+			{
+				IEquippable::Execute_Equip(actor, this);
+				
+				EquippedActor.SetInterface(equippable);
+				EquippedActor.SetObject(actor);
+			}
+		}
+	}
 }
 
 void AVRHand::ReleaseActor_Implementation()
 {
-	WantsToGrip = false;
-
-	AActor *actor = AttachedActor;
-	if (actor && actor->IsValidLowLevel())
+	if (EquippedActor)
 	{
-		// Make sure this hand is still holding the Actor (May have been taken by another hand / event)
-		if (MotionController == actor->GetRootComponent()->GetAttachParent())
-		{
-			IPickupable::Execute_Drop(actor);
-			RumbleController(0.2);
-		}
-	}
 
-	AttachedActor = nullptr;
+	}
+	else
+	{
+		WantsToGrip = false;
+
+		AActor *actor = AttachedActor;
+		if (actor && actor->IsValidLowLevel())
+		{
+			// Make sure this hand is still holding the Actor (May have been taken by another hand / event)
+			if (MotionController == actor->GetRootComponent()->GetAttachParent())
+			{
+				IPickupable::Execute_Drop(actor);
+				RumbleController(0.2);
+			}
+		}
+
+		AttachedActor = nullptr;
+	}
 }
 
 // Called every frame

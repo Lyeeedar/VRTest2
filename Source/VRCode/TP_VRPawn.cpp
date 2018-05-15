@@ -7,6 +7,7 @@
 #include "VRCode.h"
 #include "VRPawn.h"
 #include "VRHand.h"
+#include "IEquippable.h"
 #include "IXRTrackingSystem.h"
 #include "Runtime/HeadMountedDisplay/Public/IHeadMountedDisplay.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -49,6 +50,11 @@ void AVRPawn::BeginPlay()
 		UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
 	}
 
+	AVRHand *Left = Cast<AVRHand>(LeftHand->GetChildActor());
+	AVRHand *Right = Cast<AVRHand>(RightHand->GetChildActor());
+
+	Left->Body = this;
+	Right->Body = this;
 }
 
 void AVRPawn::FinishTeleport( AVRHand *Current, const FVector &TeleportPosition, const FRotator &TeleportRotator )
@@ -267,6 +273,25 @@ void AVRPawn::HandleGrip( UChildActorComponent *Hand, EInputEvent KeyEvent )
 	}
 }
 
+void AVRPawn::HandleTrigger(UChildActorComponent *Hand, EInputEvent KeyEvent)
+{
+	AVRHand *Current = Cast<AVRHand>(Hand->GetChildActor());
+	if (Current)
+	{
+		if (KeyEvent == IE_Pressed)
+		{
+			if (Current->EquippedActor)
+			{
+				IEquippable::Execute_Use(Current->EquippedActor.GetObject());
+			}
+		}
+		else // released
+		{
+			//Current->ReleaseActor();
+		}
+	}
+}
+
 void AVRPawn::BindInputActionUFunction( class UInputComponent* PlayerInputComponent, FName ActionName, EInputEvent KeyEvent, FName FuncName, UChildActorComponent *Hand )
 {
 	FInputActionBinding InputActionBinding( ActionName, KeyEvent );
@@ -288,13 +313,13 @@ void AVRPawn::SetupPlayerInputComponent( class UInputComponent* PlayerInputCompo
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "TeleportRight" ), IE_Pressed, TEXT( "HandleButtonStyleTeleportActivation" ), RightHand );
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "TeleportRight" ), IE_Released, TEXT( "HandleButtonStyleTeleportActivation" ), RightHand );
 
-	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripLeft" ), IE_Pressed, TEXT( "HandleGrip" ), LeftHand );
-	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripLeft" ), IE_Released, TEXT( "HandleGrip" ), LeftHand );
+	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripLeft" ), IE_Pressed, TEXT( "HandleTrigger" ), LeftHand );
+	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripLeft" ), IE_Released, TEXT( "HandleTrigger" ), LeftHand );
+	BindInputActionUFunction(PlayerInputComponent, TEXT("GripRight"), IE_Pressed, TEXT("HandleTrigger"), RightHand);
+	BindInputActionUFunction(PlayerInputComponent, TEXT("GripRight"), IE_Released, TEXT("HandleTrigger"), RightHand);
+
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "GrabLeft" ), IE_Pressed, TEXT( "HandleGrip" ), LeftHand );
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "GrabLeft" ), IE_Released, TEXT( "HandleGrip" ), LeftHand );
-
-	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripRight" ), IE_Pressed, TEXT( "HandleGrip" ), RightHand );
-	BindInputActionUFunction( PlayerInputComponent, TEXT( "GripRight" ), IE_Released, TEXT( "HandleGrip" ), RightHand );
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "GrabRight" ), IE_Pressed, TEXT( "HandleGrip" ), RightHand );
 	BindInputActionUFunction( PlayerInputComponent, TEXT( "GrabRight" ), IE_Released, TEXT( "HandleGrip" ), RightHand );
 

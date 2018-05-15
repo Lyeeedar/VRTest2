@@ -95,6 +95,9 @@ public:
 	UFUNCTION()
 	void HandleGrip( class UChildActorComponent *Hand, EInputEvent KeyEvent );
 
+	UFUNCTION()
+	void HandleTrigger( class UChildActorComponent *Hand, EInputEvent KeyEvent );
+
 	void BindInputActionUFunction( class UInputComponent* PlayerInputComponent, FName ActionName, EInputEvent KeyEvent, FName FuncName, class UChildActorComponent *Hand );
 
 	UFUNCTION()
