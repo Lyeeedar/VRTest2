@@ -28,13 +28,13 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-// 	
-// 	UFUNCTION( BlueprintNativeEvent, BlueprintCallable, Category = "Pickupable Interface" )
-// 	void Pickup( class USceneComponent *AttachTo );
+ 	
+ 	UFUNCTION( BlueprintNativeEvent, BlueprintCallable, Category = "Pickupable Interface" )
+ 	void Pickup( class USceneComponent *AttachTo );
 	virtual void Pickup_Implementation( class USceneComponent *AttachTo );
-// 
- 	//UFUNCTION( BlueprintNativeEvent, BlueprintCallable, Category = "Pickupable Interface" )
-// 	void Drop();
+ 
+ 	UFUNCTION( BlueprintNativeEvent, BlueprintCallable, Category = "Pickupable Interface" )
+ 	void Drop();
 	virtual void Drop_Implementation();
 
 };

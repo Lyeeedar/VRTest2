@@ -180,6 +180,8 @@ void AVRPawn::HandleLeftStick()
 		FRotator DeviceRotation;
 		UHeadMountedDisplayFunctionLibrary::GetOrientationAndPosition(DeviceRotation, DevicePosition);
 
+		DeviceRotation = DeviceRotation + GetActorRotation();
+
 		// fwd
 		if (fwd != 0)
 		{
