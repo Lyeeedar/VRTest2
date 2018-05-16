@@ -282,7 +282,7 @@ void AVRPawn::HandleTrigger(UChildActorComponent *Hand, EInputEvent KeyEvent)
 		{
 			if (Current->EquippedActor)
 			{
-				IEquippable::Execute_Use(Current->EquippedActor.GetObject());
+				IEquippable::Execute_Use(Current->EquippedActor);
 			}
 		}
 		else // released

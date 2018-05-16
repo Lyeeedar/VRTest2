@@ -10,8 +10,6 @@
 
 #include "VRHand.generated.h"
 
-class UEquippable;
-
 UENUM(BlueprintType)
 enum class EGripState : uint8
 {
@@ -95,7 +93,7 @@ public:
 	class AActor *AttachedActor;
 
 	UPROPERTY( EditAnywhere, BlueprintReadWrite, Category = "Code Variables" )
-	TScriptInterface<UEquippable> EquippedActor;
+	class AActor *EquippedActor;
 
 	FRotator TeleportRotator;
 	bool LastIsValidTeleportDestination;

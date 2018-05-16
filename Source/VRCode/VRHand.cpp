@@ -184,10 +184,9 @@ void AVRHand::GrabActor_Implementation()
 {
 	if (EquippedActor)
 	{
-		IEquippable::Execute_Unequip(EquippedActor.GetObject());
-		IPickupable::Execute_Drop(EquippedActor.GetObject());
-		EquippedActor.SetInterface(nullptr);
-		EquippedActor.SetObject(nullptr);
+		IEquippable::Execute_Unequip(EquippedActor);
+		IPickupable::Execute_Drop(EquippedActor);
+		EquippedActor = nullptr;
 		AttachedActor = nullptr;
 	}
 	else
@@ -201,13 +200,12 @@ void AVRHand::GrabActor_Implementation()
 			IPickupable::Execute_Pickup(actor, MotionController);
 			RumbleController(0.7);
 
-			UEquippable* equippable = Cast<UEquippable>(actor);
-			if (equippable)
+			
+			if (UKismetSystemLibrary::DoesImplementInterface(actor, UEquippable::StaticClass()))
 			{
 				IEquippable::Execute_Equip(actor, this);
 				
-				EquippedActor.SetInterface(equippable);
-				EquippedActor.SetObject(actor);
+				EquippedActor = actor;
 			}
 		}
 	}
